@@ -1,6 +1,10 @@
 #include "Position.h"
 
-Position::Position(){}
+Position::Position(){
+  imu.enableDefault();
+  encoders.getCountsAndResetLeft();
+  encoders.getCountsAndResetRight();
+}
 
 // returns robot longitudinal displacement in in
 double Position::getX(){
@@ -26,8 +30,8 @@ double Position::getVelocity(){
 void Position::updatePosition(){
 
   // retrieve encoder values of right and left motors
-  currRight = right.getValue();
-  currLeft = left.getValue();
+  currRight = encoders.getCountsLeft();
+  currLeft = encoders.getCountsRight();
 
   // find change in encoder units
   double deltaLeft = currLeft - lastLeft;
@@ -43,8 +47,8 @@ void Position::updatePosition(){
   heading = getHeading();
 
   // update robot position
-  robotPosition.x += (deltaRobot * sin(heading)) / ENCODERS_PER_INCH;
-  robotPosition.y += (deltaRobot * cos(heading) / ENCODERS_PER_INCH;
+  robotPosition.x += (deltaRobot * sin(heading)) / ENCODERS_PER_CM;
+  robotPosition.y += (deltaRobot * cos(heading) / ENCODERS_PER_CM;
 
   // ***** ADD HEADING UPDATES ******
 
