@@ -1,3 +1,24 @@
+#include <Wire.h>
+#include <Zumo32U4.h>
+#include <PololuOLED.h>
+
+/*Initilizing*/
+
+Zumo32U4Motors motors;
+Zumo32U4Encoders encoders;
+Zumo32U4LineSensors lineSensors; 
+
+Zumo32U4IMU imu;
+PololuSH1106 display(1, 30, 0, 17, 13);
+
+
+ /*Display Variables*/
+
+unsigned long lastDisplayUpdate = 0;
+const int displayInterval = 500;
+
+
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
