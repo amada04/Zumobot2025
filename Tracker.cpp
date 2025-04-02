@@ -106,19 +106,21 @@ void Tracker::calculateTargetPosition() {
     } else if ((digitalRead(L_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH)) {
       veer = -10;
     } else if ((digitalRead(R_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH)) {
-      veer = 20;
+      turnToFace(45);
     } else if ((digitalRead(L_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH)) {
-      veer = -20;
+      turnToFace(-45);
     } else if ((digitalRead(RF_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH)) {
       veer = 0;
     } else if (digitalRead(R_Sensor) == HIGH) {
-      veer = 90;
+      turnToFace(90);
     } else if (digitalRead(RF_Sensor) == HIGH) {
       veer = 20;
     } else if (digitalRead(L_Sensor) == HIGH) {
-      veer = -90;
+      turnToFace(-90);
     } else if (digitalRead(LF_Sensor) == HIGH) {
       veer = -20;
+    } else {
+      turnToFace(180);
     }
   }
 
