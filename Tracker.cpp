@@ -21,15 +21,6 @@ Tracker::Tracker() :
   lastTargetY = 0;
   isTargetFound = false;
   isTargetLost = true;
-  escape_l = false;
-  escape_r = false;
-  escape_b = false;
-}
-
-void Tracker::setEscapeConditions(bool left, bool right, bool back) {
-  escape_l = left;
-  escape_r = right;
-  escape_b = back;
 }
 
 void Tracker::ping() {
@@ -63,29 +54,7 @@ void Tracker::move_to(Coordinate target) {
 }
 
 void Tracker::knockout() {
-  setKnockoutSpeed();
-  while (digitalRead(WHITE_LINE_PIN) == LOW) {
-    applyMotorControl(0);
-    updateRobotPosition();
-    if (isTargetDetectedWithin10cm()) {
-      break;
-    }
-  }
-  stopMotors();
-}
-
-void Tracker::escape() {
-  if (escape_l) {
-    moveToSafePosition(ESCAPE_LEFT);
-  } else if (escape_r) {
-    moveToSafePosition(ESCAPE_RIGHT);
-  } else if (escape_b) {
-    moveToSafePosition(ESCAPE_BACK);
-  }
-
-  if (isContact()) {
-    knockout();
-  }
+  // max motor speed until reaches white line
 }
 
 void Tracker::calculateTargetPosition() {
@@ -223,28 +192,77 @@ void Tracker::updateRobotPosition() {
 
 bool Tracker::isTargetReached(Coordinate target) {
   double distance_to_target = sqrt(pow(target.x - FuzeBot.getX(), 2) + pow(target.y - FuzeBot.getY(), 2));
-  return distance_to_target < 5.0;
+  return distance_to_target < .5;
 }
 
-bool Tracker::isContact() {
-  return digitalRead(CONTACT_PIN) == HIGH;
+void Tracker::isContact() {
+  double currX = FuzeBot.getX();
+  double currY = FuzeBot.getY();
+  double currHeading = FuzeBot.getHeading();
+
+  double distanceToTarget = sqrt(pow(target.x - currX, 2) + pow(target.y - currY, 2));
+  double headingDifference = abs(currHeading - target.heading);
+  
+  // determine direction of deviation
+  double deviation = atan2(target.y - currY, target.x - currX) - currHeading;
+    if (deviation < -M_PI) {
+        moveToSafePosition(ESCAPE_LEFT);
+    } else if (deviation > M_PI) {
+        moveToSafePosition(ESCAPE_RIGHT);
+    }
 }
 
 bool Tracker::isLifted() {
-  return digitalRead(LIFTED_PIN) == HIGH;
+
+  // read accelerometer data
+  m = readMag();
+
+  if (imu.m[2] > (declination + 0.5) || imu.m[2] < (declination - 0.5)) {
+    isLifted = true;
+  } else {
+    isLifted = false;
+  }
+
 }
 
 bool Tracker::isTargetDetectedWithin10cm() {
-  // Implement ultrasonic distance check for 10cm
-  return false;
+  double distance, duration;
+
+  digitalWrite(trig1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig1, HIGH);
+  delayMicroseconds(10);
+  duration = pulseIn(echo1, HIGH, 30000);
+
+  distance = (duration / 2.0) * 0.0343;
+
+  if (distance < 10.0) {
+    isTargetDetectedWithin10cm = true;
+  } else {
+    isTargetDetectedWithin10cm = false;
+  }
 }
 
 void Tracker::setKnockoutSpeed() {
-  // Set knockout motor speeds
+  motors.setSpeed(255, 255);
+  // end when white line is detected
 }
 
 void Tracker::moveToSafePosition(EscapeDirection direction) {
   // Implement movement to safe position based on direction
+  switch (direction) {
+    case ESCAPE_LEFT:
+      turnToFace(-90);
+      moveForward(30);
+    break;
+    case ESCAPE_RIGHT:
+      turnToFace(90);
+      moveForward(30);
+    break;
+    case ESCAPE_BACK:
+      turnToFace(180);
+      moveForward(30);
+    break;
 }
 
 double Tracker::getAccelerometerHeading() {
