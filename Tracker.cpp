@@ -17,6 +17,9 @@ class Tracker:
       pinMode(RF_Sensor, INPUT);
       pinMode(L_Sensor, INPUT);
       pinMode(LF_Sensor, INPUT);
+      lastTargetTime = 0;
+      lastTargetX = 0;
+      lastTargetY = 0;
     }
 
     
@@ -39,10 +42,14 @@ class Tracker:
       if (distance < 76.2) {
 
         // comb through all IR sensor combination readings and assign a change in heading
-        if ((digitalRead(R_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH) {
-          dHeading = 45;
+        if ((digitalRead(R_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH)) {
+          dHeading = 10;
+        } else if ((digitalRead(L_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH)) {
+          dHeading -10;
+        } else if ((digitalRead(R_Sensor) == HIGH) && (digitalRead(RF_Sensor) == HIGH)) {
+          dHeading = 20;
         } else if ((digitalRead(L_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH)) {
-          dHeading -45;
+          dHeading = -20;
         } else if ((digitalRead(RF_Sensor) == HIGH) && (digitalRead(LF_Sensor) == HIGH)) {
           dHeading = 0;
         } else if (digitalRead(R_Sensor) == HIGH) {
@@ -59,20 +66,76 @@ class Tracker:
       // using calculated distance and dHeading calculate target coordinates
       target.x = FuzeBot.getX() + (distance * sin(heading));
       target.y = FuzeBot.getY() + (distance * cos(heading));
-      target.heading = FuzeBot.heading + dHeading;     
-    }
+      target.heading = FuzeBot.heading + dHeading;   
 
-    void move_to (Coordinate target) {
+      // get current time
+      unsigned long currentTime = millis();
+      if (lastTargetTime != 0) {
+
+        // calculate target velocities
+        double deltaTime = (currentTime - lastTargetTime) / 1000.0;
+        double targetVelX = (target.x - lastTargetX) / deltaTime;
+        double targetVelY = (target.y - lastTargetY) / deltaTime;
+        lastTargetTime = currentTime;
+
+        // predict future position
+        target.x += targetVelX * predictionTime;
+        target.y += targetVelY * predictionTime;
+      } else {
+        
+        // initialize lastTarget on the first reading.
+        lastTargetX = target.x;
+        lastTargetY = target.y;
+        lastTargetTime = currentTime;
+      }
       
     }
 
-    void track () {
+    void move_to (Coordinate target) {
+
+      // while true
+      while (true) {
+
+        // get look ahead point and curvature
+        findLookAhead();
+        double curvature = findCurvature();
+
+        if (curvature == -1) {
+          Serial.println("Target reached or no lookahead point.");
+          break;
+        }
+
+        // calculate angle
+        double steering_angle = atan(curvature * 10.0); // Adjust wheelbase
+      // ... your motor control code here ...
+        Serial.print("Curvature: ");
+        Serial.print(curvature);
+        Serial.print(" Steering angle: ");
+        Serial.println(steering_angle);
+
+        // 
+        double delta_x = cos(FuzeBot.getHeading()) * 1.0;
+        double delta_y = sin(FuzeBot.getHeading()) * 1.0;
+        double delta_heading = steering_angle * 0.1;
+        FuzeBot.updatePosition(delta_x, delta_y, delta_heading);
+        delay(50);
+
+        double distance_to_target = sqrt(pow(target.x - FuzeBot.getX(), 2) + pow(target.y - FuzeBot.getY(), 2));
+        if (distance_to_target < 5.0) {
+          Serial.println("Target reached!");
+          break;
+        }
+      }
+    }
       
   private:
     Position FuzeBot;
     Coordinate target;
     Coordinate lookAhead;
-    double lookAheadDistance = 8;
+      unsigned long lastTargetTime;
+    double lastTargetX;
+    double lastTargetY;
+    double predictionTime = 0.2;
 
     void findLookAhead() {
 
@@ -105,11 +168,10 @@ class Tracker:
         } 
       }
 
-      void findCurvature() {
+      double findCurvature() {
 
         if (lookAhead.x == -1 && lookAhead.y == -1) {
-          lookAhead.heading = -1;
-          return;
+          return -1;
         }
         
         double x = FuzeBot.getX();
@@ -119,6 +181,6 @@ class Tracker:
         double alpha = atan2(ly -y, lx - x) - heading;
         double curvature = 2 * sin(alpha) / lookAheadDistance;
       }
-        
+        return curvature;
     }
     
