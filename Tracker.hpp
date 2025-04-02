@@ -17,10 +17,6 @@ public:
   void ping();
   void move_to(Coordinate target);
   void knockout();
-  void escape();
-
-  // Set escape conditions
-  void setEscapeConditions(bool left, bool right, bool back);
 
 private:
   Position FuzeBot;
@@ -34,11 +30,7 @@ private:
   const double WHEELBASE;
   bool isTargetFound;
   bool isTargetLost;
-
-  // Escape conditions
-  bool escape_l;
-  bool escape_r;
-  bool escape_b;
+  double declination;
 
   // Pin definitions
   const int CONTACT_PIN;
@@ -60,6 +52,11 @@ private:
     ESCAPE_BACK
   };
 
+  // flags
+  bool isTargetDetectedWithin10cm;
+  bool isLifted;
+  bool isContact;
+
   void calculateTargetPosition();
   void predictTargetPosition();
   void findLookAhead();
@@ -70,7 +67,6 @@ private:
   bool isTargetReached(Coordinate target);
   bool isContact();
   bool isLifted();
-  bool isTargetDetectedWithin10cm();
   void setKnockoutSpeed();
   void moveToSafePosition(EscapeDirection direction);
   double getAccelerometerHeading();
