@@ -25,6 +25,9 @@ void turnSensorUpdate() {
   //
     imu.readGyro();
     turnRate = imu.g.z - gyroOffset;
+    if (turnRate < 0.5) {
+        turnRate = 0;
+    }
       // how much time passed sinse the last update
   //
     uint32_t t = micros();
