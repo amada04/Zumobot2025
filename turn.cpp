@@ -4,6 +4,15 @@
 /*When the robot accelerates to much the gyro loses some persetion. But it doesn drift by its self anymore
 Now on to prosition tracting
 */
+
+/* PID Constants */
+float Kp = 56;
+float Ki = 1;
+float Kd = 4;
+float bias = 0;
+int baseSpeed = 200;
+
+
 void turn(int16_t targetAngle) {
   if (targetAngle > 360) {
     Serial.print("Error");
