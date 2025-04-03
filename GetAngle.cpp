@@ -15,26 +15,23 @@ uint32_t gyroLastUpdate = 0;
 
 /*Use this for when we want to reset the bots orientation */
 
+/* Reset bot's orientation */
 void turnSensorReset() {
-    gyroLastUpdate = micros();
-    turnAngle = 0;
+  gyroLastUpdate = micros();
+  turnAngle = 0;
 }
 
+/* Update gyro readings */
 void turnSensorUpdate() {
-    // reading rom the z axes, (rotation)
-  //
-    imu.readGyro();
-    turnRate = imu.g.z - gyroOffset;
-    if (turnRate < 0.5) {
-        turnRate = 0;
-    }
-      // how much time passed sinse the last update
-  //
-    uint32_t t = micros();
-    uint32_t dt = t - gyroLastUpdate;
-    gyroLastUpdate = t;
-    int32_t d = (int32_t)turnRate * dt;
-     /* Huh?
+  imu.readGyro();
+  turnRate = imu.g.z - gyroOffset;
+  
+  uint32_t t = micros();
+  uint32_t dt = t - gyroLastUpdate;
+  gyroLastUpdate = t;
+  int32_t d = (int32_t)turnRate * dt;
+
+         /* Huh?
    So apparently this is convert the d (which is time in microseconds)
    we need to convert them to the degrees, which we used 2^29 for turnAngle
    which is converting gyro digits to degrees per second.
@@ -42,43 +39,39 @@ void turnSensorUpdate() {
    so we have to multiplty that by those 2 constants to get it in degress, black magic frfr
    reference
   */
-    turnAngle += (int64_t)d * 14680064 / 17578125;
+  // Convert raw gyro data to angle in degrees
+  turnAngle += (int64_t)d * 14680064 / 17578125;
 }
 
-void gyroSensor() {
-    Wire.begin();
-    imu.init();
-    imu.enableDefault();
-    imu.configureForTurnSensing();
 
-    display.clear();
-    display.print(F("Gyro cal"));
-    ledYellow(1);
-    delay(500);
+/* Calibrate gyro sensor */
+void gyroSensorInit() {
+  Wire.begin();
+  imu.init();
+  imu.enableDefault();
+  imu.configureForTurnSensing();
 
-    int32_t total = 0;
-    for (uint16_t i = 0; i < 1024; i++) {
-        while (!imu.gyroDataReady()) {}
-        imu.readGyro();
-        total += imu.g.z;
-    }
-    ledYellow(0);
-    gyroOffset = total / 1024;
+  display.clear();
+  display.print(F("Gyro cal"));
+  ledYellow(1);
+  delay(500);
 
-    display.clear();
-    turnSensorReset();
+  int32_t total = 0;
+  for (uint16_t i = 0; i < 1024; i++) {
+    while (!imu.gyroDataReady()) {}
+    imu.readGyro();
+    total += imu.g.z;
+  }
+  ledYellow(0);
+  gyroOffset = total / 1024;
 
-    while (!buttonA.getSingleDebouncedRelease()) {
-        turnSensorUpdate();
-        display.gotoXY(0, 0);
-        display.print((((int32_t)turnAngle >> 16) * 360) >> 16);
-        display.print(F("   "));
-    }
-    display.clear();
+  display.clear();
+  turnSensorReset();
 }
 
 void setup() {
-    gyroSensor();
+      gyroSensorInit();
+
 }
 
 void loop() {
