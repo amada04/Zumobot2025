@@ -2,7 +2,7 @@
 #include <Zumo32U4.h>
 #include <PololuOLED.h>
 #include <Zumo32U4Buttons.h>
-
+#include <Zumo32U4ProximitySensors.h>
 
 Zumo32U4Motors motors;
 Zumo32U4Encoders encoders;
@@ -45,11 +45,12 @@ unsigned int lineSensorValues[NUM_SENSORS];
 #define TURN_DURATION 300     // Time to turn (ms)
 
 
+// IR SENSOR CODE 
 
-
-
+Zumo32U4ProximitySensors prox;
 
 void setup(){
+  prox.initThreeSensors(); // Initialize left, front, and right sensors
 
   
 }
@@ -58,7 +59,36 @@ void setup(){
 
 void loop(
 
+  prox.read(); // Perform IR sensing
 
+  // Get readings from all three sensors
+  uint8_t leftL = prox.countsLeftWithLeftLeds();
+  uint8_t leftR = prox.countsLeftWithRightLeds();
+
+  uint8_t frontL = prox.countsFrontWithLeftLeds();
+  uint8_t frontR = prox.countsFrontWithRightLeds();
+
+  uint8_t rightL = prox.countsRightWithLeftLeds();
+  uint8_t rightR = prox.countsRightWithRightLeds();
+
+
+  // Print the readings to the Serial Monitor
+  Serial.print("Left (L/R): ");
+  Serial.print(leftL);
+  Serial.print(" / ");
+  Serial.print(leftR);
+
+  Serial.print(" | Front (L/R): ");
+  Serial.print(frontL);
+  Serial.print(" / ");
+  Serial.print(frontR);
+
+  Serial.print(" | Right (L/R): ");
+  Serial.print(rightL);
+  Serial.print(" / ");
+  Serial.println(rightR);
+
+  delay(200); // Small delay between readings
 
 )
 
