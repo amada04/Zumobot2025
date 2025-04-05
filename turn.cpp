@@ -13,23 +13,33 @@ float bias = 0;
 int baseSpeed = 200;
 
 
-void turn(int16_t targetAngle) {
-  if (targetAngle > 360) {
-    Serial.print("Error");
-    return;
-  }
+void turn(int16_t turnAngle) {
+  turnSensorUpdate();
+  int16_t = targetAngle = currentAngle + turnAngle;
 
+  if (targetAngle >= 360) {
+    targetAngle -= 360;
+  } else if (targetAngle < 0) {
+    targetAngle += 360;
+  }
+  
   on_contact_lost();
 
-  int16_t error = targetAngle;
+  int16_t error = targetAngle - currentAngle;
   int16_t lastError = error;
   float integral = 0;
 
   while (abs(error) > 5) {
     turnSensorUpdate();
-
-    currentAngle = (((int32_t)targetAngle >> 16) * 360) >> 16;
+    
     error = targetAngle - currentAngle;
+    
+    // Handle wrapping around 0/360 degrees, ensure shortest turn.
+    if (error > 180) {
+      error -= 360;
+    } else if (error < -180) {
+      error += 360;
+    }
 
     integral += error;
     integral = constrain(integral, -1000, 1000); // Integral windup prevention
