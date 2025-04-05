@@ -13,9 +13,12 @@ float bias = 0;
 int baseSpeed = 200;
 
 
-void turn(int16_t turnAngle) {
+void turn(int16_t relativeAngle) {
   turnSensorUpdate();
-  int16_t = targetAngle = currentAngle + turnAngle;
+
+  int16_t startAngle = turnAngle;
+  
+  int16_t = targetAngle = startAngle + relativeAngle;
 
   if (targetAngle >= 360) {
     targetAngle -= 360;
@@ -25,14 +28,20 @@ void turn(int16_t turnAngle) {
   
   on_contact_lost();
 
-  int16_t error = targetAngle - currentAngle;
+  
+
+  int16_t error = targetAngle - startAngle;
   int16_t lastError = error;
   float integral = 0;
-
+  
   while (abs(error) > 5) {
     turnSensorUpdate();
     
-    error = targetAngle - currentAngle;
+    int16_t currentAngle = turnAngle;
+
+    int16_t deltaAngle = currentAngle - startAngle;
+    
+    error = targetAngle - deltaAngle;
     
     // Handle wrapping around 0/360 degrees, ensure shortest turn.
     if (error > 180) {
