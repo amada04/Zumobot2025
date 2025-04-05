@@ -10,8 +10,9 @@ bool isDetected() {
   uint8_t right = prox.countsRightWithRightLeds();
   
   uint8_t diff = right + frontright - frontleft - left;
-  if (diff == 0 && frontright > 3 && frontleft > 3)
-      return true;
+  
+  if (diff == 0 && frontright > 3 && frontleft > 3) return true;
+  
   return false;
 }
 
