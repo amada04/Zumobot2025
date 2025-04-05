@@ -19,6 +19,8 @@ void turn(int16_t targetAngle) {
     return;
   }
 
+  on_contact_lost();
+  
   int16_t error = targetAngle;
   int16_t lastError = error;
   float integral = 0;
@@ -42,4 +44,5 @@ void turn(int16_t targetAngle) {
   }
 
   motors.setSpeeds(0, 0);
+  last_turn_time = millis();
 }
