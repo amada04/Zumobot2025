@@ -90,6 +90,30 @@ void loop(
 
   delay(200); // Small delay between readings
 
+
+turnSensorUpdate();
+  // if (!avoidWhiteLine()) {
+ // motors.setSpeeds(250, 250);
+    if (buttonB.isPressed())
+  {
+    delay(1000);
+    // Whenever the button is pressed, turn on the yellow LED.
+    turn(90);
+   delay(1000);
+  }
+  if(buttonA.isPressed())
+  {
+    delay(1000);
+    turn(180);  
+    delay(1000);
+  }
+  if(buttonA.isPressed())
+  {
+    delay(1000);
+        turn(-1);
+    delay(1000);
+  }
+
 )
 
 
